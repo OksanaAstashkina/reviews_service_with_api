@@ -89,32 +89,176 @@ python manage.py createsuperuser
 python manage.py import_db_csv
 ```
 
-
-## Документация
+## Работа с API
 
 Полная документация API доступна по адресу `http://127.0.0.1:8000/redoc/`.
 Также файл с документацией находится по адресу `.../api_yamdb/static/redoc.yaml`.
 Здесь вы можете ознакомиться со всеми возможными запросами и параметрами, которые поддерживает API.
 
+Прежде всего для доступа к API необходимо получить токен, для чего необходимо выполнить POST-запрос к url http://127.0.0.1:8000/api/v1/jwt/create/, передав поля username и password. API вернет JWT-токен. Дальше, передав токен, можно будет обращаться к методам запроса (GET, POST, PUT, PATCH, DELETE). При отправке запроса передавайте токен в заголовке Authorization: Bearer <токен>
 
-Работа с API для неавторизованных пользователей
+
+__Работа с API для неавторизованных пользователей__:
 
 Для неавторизованных пользователей API доступно только для чтения. Ниже приведены некоторые примеры запросов, которые могут быть выполнены:
 
+Пример запроса анонимного пользователя на получение списка всех категорий:
+```
+GET /api/v1/categories/
+```
 
-  Получение списка всех категорий:
+__Регистрация пользователя и получение токена через API__:
 
+Передайте на /api/v1/auth/signup/ свои username и email. Использовать имя 'me' запрещено. Каждое поле должно быть уникальнымм. Если пользователя ещё нет в базе данных, он будет создан.
 
-    `GET /api/v1/categories/`
+Пример запроса на регистрацию:
+
+POST /api/v1/auth/signup/
+```
+{
+    "email": "string",
+    "username": "string"
+}
+```
+
+На ваш email будет отправлен код подтверждения.
+Передайте на /api/v1/auth/token/ свой email и confirmation_code из письма, в ответе вы получите JWT-токен.
+
+Пример запроса на получение токена:
+
+POST /api/v1/auth/token/
+```
+{
+    "username": "string",
+    "confirmation_code": "string"
+}
+```
+
+__Примеры иных запросов через API__:
+
+Получение списка всех категорий: GET /api/v1/categories/
+
+Получение списка всех отзывов: GET /api/v1/titles/{title_id}/reviews/
+
+Получение пользователя: GET /api/v1/users/{username}/
+
+Получение данных своей учетной записи: GET /api/v1/users/me/
+
+Удаление категории: DELETE /api/v1/categories/{slug}/
+
+Добавление жанра:
+
+POST /api/v1/genres/
+```
+{
+    "name": "string",
+    "slug": "string"
+}
+```
+Добавление произведения:
+
+POST /api/v1/titles/
+```
+{
+    "name": "string",
+    "year": 0,
+    "description": "string",
+    "genre": [
+        "string"
+    ],
+    "category": "string"
+}
+```
+
+Добавление пользователя:
+
+POST /api/v1/users/
+```
+{
+    "username": "string",
+    "email": "user@example.com",
+    "first_name": "string",
+    "last_name": "string",
+    "bio": "string",
+    "role": "user"
+}
+```
+    
 
 ***
 ## *Комманда разработки*
 
-Оксана Асташкина [GitHub](https://github.com/OksanaAstashkina) @OksanaAstashkina (тимлид) - Categories/Genres/Titles (категории, жанры и произведения: модели, view и эндпойнты; импорт данных в базу данных из .csv файлов.
+Оксана Асташкина [@OksanaAstashkina](https://github.com/OksanaAstashkina) (тимлид) - Categories/Genres/Titles (модели, view и эндпойнты для категорий, жанров и произведений; импорт данных в базу данных из .csv файлов)
 
-Владислав Бычков [GitHub](https://github.com/DoctorWD041) @DoctorWD041 (разработчик) - Auth/Users (регистрация, подтверждение по e-mail, получение JWT-токена и управление пользователями. Права доступа.
+Владислав Бычков [@DoctorWD041](https://github.com/DoctorWD041) (разработчик) - Auth/Users (регистрация, подтверждение по e-mail, получение JWT-токена и управление пользователями; права доступа)
 
-Вячеслав Козлов [GitHub](https://github.com/Vyacheslav63) @Vyacheslav63 (разработчик) - Review/Comments отзывы и комментарии: модели, view и эндпойнты. Рейтинги произведений.
+Вячеслав Козлов [@Vyacheslav63](https://github.com/Vyacheslav63) (разработчик) - Review/Comments (модели, view и эндпойнты для отзывов и комментариев; рейтинги произведений)
 
 ### *Дата создания*
 Май, 2023 г.
+
+
+
+### Пример запроса на получение токена
+
+Пример запроса:
+POST _http://127.0.0.1:8000/api/v1/jwt/create/_
+```
+{
+    "username": "string",
+    "password": "string"
+}
+```
+
+Пример ответа:
+```
+{
+    "refresh": "string",
+    "access": "string"
+}
+```
+
+### Пример запроса для неавторизованного пользователя:
+
+**Получение записи по id**
+
+Пример запроса:
+GET __http://127.0.0.1:8000/api/v1/posts/1/_ 
+
+Пример ответа:
+```
+{
+    "id": 0,
+    "author": "string",
+    "text": "string",
+    "pub_date": "2023-04-22T06:57:22.613765Z",
+    "image": "string",
+    "group": null
+}
+```
+
+### Пример запроса для авторизованного пользователя
+
+**Создание новой записи**
+
+Пример запроса:
+POST _http://127.0.0.1:8000/api/v1/posts/_
+```
+{
+    "text": "string, required field",
+    "image": "string", 
+    "group": integer 
+}
+```
+
+Пример ответа:
+```
+{
+    "id": 0,
+    "author": "string",
+    "text": "string",
+    "pub_date": "2019-08-24T14:15:22Z",
+    "image": "string",
+    "group": 0
+}
+```
